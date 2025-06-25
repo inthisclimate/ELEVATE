@@ -152,6 +152,8 @@ ggplot(df.co2,
   theme(legend.position = "bottom") + 
   scale_fill_brewer(palette = "Dark2")
 
+
+
   #annotate("text",x=1,y=105,label="Treatment sig diff (2-way \n ANOVA on log-transformed \n  response var): \n Treatment p-val < 0.01 \n Site and interaction p-val < 0.1 \n n = 4 per location",size = 3)
 #ggsave("Efflux/efflux_figures/efflux_species-treatment_boxplot.png",width = 8, height = 6)
 

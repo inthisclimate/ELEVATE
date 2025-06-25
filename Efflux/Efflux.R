@@ -146,16 +146,40 @@ ggplot(df.co2,
                shape = 21, size = 2.5, fill = "white", color = "black",
                position = position_dodge(width = 0.75)) +
   
-  labs(y = expression("CO"[2]*" flux (µmol m"^{-2}*" s"^{-1}*")"), 
+  labs(y = expression("CO"[2]*" efflux (µmol m"^{-2}*" s"^{-1}*")"), 
        x = "Species") + 
   theme_bw() + 
   theme(legend.position = "bottom") + 
   scale_fill_brewer(palette = "Dark2")
+ggsave("efflux_figures/efflux_CO2_species_boxplot_062425.png",width = 6, height = 4)
 
 
 
-  #annotate("text",x=1,y=105,label="Treatment sig diff (2-way \n ANOVA on log-transformed \n  response var): \n Treatment p-val < 0.01 \n Site and interaction p-val < 0.1 \n n = 4 per location",size = 3)
-#ggsave("Efflux/efflux_figures/efflux_species-treatment_boxplot.png",width = 8, height = 6)
+#Plot boxplots of each site-species' ch4 flux
+ggplot(df.ch4, 
+       aes(x = Species, y = CH4_flux.umol.m2.s, fill = Species)) +
+  
+  # Boxplots: grouped by Species × Treatment
+  geom_boxplot(aes(group = interaction(Species, Treatment)),
+               outlier.shape = 1,
+               position = position_dodge(width = 0.75)) +
+  
+  # White mean dots: also grouped by Species × Treatment
+  stat_summary(aes(group = interaction(Species, Treatment)),
+               fun = mean, geom = "point", 
+               shape = 21, size = 2.5, fill = "white", color = "black",
+               position = position_dodge(width = 0.75)) +
+  
+  labs(y = expression("CH"[4]*" efflux (µmol m"^{-2}*" s"^{-1}*")"), 
+       x = "Species") + 
+  theme_bw() + 
+  theme(legend.position = "bottom") + 
+  scale_fill_brewer(palette = "Dark2")
+ggsave("efflux_figures/efflux_CH4_species_boxplot_062425.png",width = 6, height = 4)
+
+
+# Linear model with aranet co2 --------------------------------------------
+
 
 
 # Save data as 1 dataframe ------------------------------------------------

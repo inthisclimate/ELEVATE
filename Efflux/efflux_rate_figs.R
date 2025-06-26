@@ -105,8 +105,4 @@ ch4_flux_estimates <- efflux %>%
 ch4_flux_estimates
 
 
-# Same models, more summary lm() ------------------------------------------
 
-brycra <- efflux%>%filter(Species=="BRYCRA")
-summary(lm(CO2 ~ time_elapsed, data = brycra))
-summary(lm(CH4 ~ time_elapsed, data = brycra))

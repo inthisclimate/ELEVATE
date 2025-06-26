@@ -78,8 +78,8 @@ head(efflux_summary_species.ch4)
 efflux_summary_species <- merge(efflux_summary_species.co2, 
                                 efflux_summary_species.ch4, 
                                      by="Species")
-
-
+efflux_summary_species
+write.csv(efflux_summary_species, "Efflux/efflux_summary_species.csv", row.names=FALSE)
 
 # Stats to test for significance between species and CO2 efflux--------------------------
 
@@ -107,9 +107,9 @@ pairwise.wilcox.test(df$CO2_flux.umol.m2.s, df$Species, p.adjust.method = "bonfe
 # Kruskal-Wallis CO2flux difference between Species 
 # (Does not require normality or equal variance)
 kruskal.test(CH4_flux.umol.m2.s ~ Species, data = df.ch4)
-# data:  CO2_flux.umol.m2.s by Species
-# Kruskal-Wallis chi-squared = 350.44, df = 2, p-value < 2.2e-16
-#There is a statistically significant difference in CO₂ flux medians among the three species.
+# data:  CH4_flux.umol.m2.s by Species
+# Kruskal-Wallis chi-squared = 15.869, df = 2, p-value = 0.0003581
+#There is a statistically significant difference in CH4 flux medians among the three species.
 
 #Which species are statistically different?
 pairwise.wilcox.test(df$CH4_flux.umol.m2.s, df$Species, p.adjust.method = "bonferroni")
@@ -176,9 +176,6 @@ ggplot(df.ch4,
   theme(legend.position = "bottom") + 
   scale_fill_brewer(palette = "Dark2")
 ggsave("efflux_figures/efflux_CH4_species_boxplot_062425.png",width = 6, height = 4)
-
-
-# Linear model with aranet co2 --------------------------------------------
 
 
 

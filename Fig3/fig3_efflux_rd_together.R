@@ -76,9 +76,10 @@ aranet <- read.csv("Aranet-January/aranet.IQRfiltered.site_plots.csv", stringsAs
 str(aranet)
 
 #keep essentials
-aranet <- aranet%>%select(c(site, aranetco2_ppm, site_plot, treatment))%>%
+aranet <- aranet%>%select(c(site, aranetco2_ppm, site_plot, treatment, time_of_day))%>%
   rename(Site = site,
-         Treatment = treatment)
+         Treatment = treatment)%>%
+  filter(time_of_day == "Daytime")
 str(aranet)
 
 #summarize
@@ -86,10 +87,40 @@ aranet <- aranet%>%group_by(site_plot)%>%
   summarize(aranetco2_ppm = mean(aranetco2_ppm, na.rm=TRUE))
 
 
+# get soil respiration data -----------------------------------------------
+
+soilr <- read.csv("soil_respiration/ELEVATE-DataProcessed/ELEVATEsoilflux_df.csv", stringsAsFactors = FALSE)
+head(soilr)
+
+#update names
+soilr <- soilr%>%select(Site, Treatment, Collar, FCO2_DRY_umolm2s, FCH4_DRY_nmolm2s)%>%
+  mutate(Treatment = recode(Treatment,
+                            "Control" = "A",
+                            "Elevated" = "B",
+                            "cont" = "A",
+                            "Cont" = "A",
+                            "con" = "A",
+                            "Con" = "A",
+                            "CON" = "A",
+                            "sou" = "Source",
+                            "co2"= "B",
+                            "CO2"= "B"))%>%
+  filter(Treatment!="Source")
+str(soilr)
+
+soilr$site_plot <-   paste0(soilr$Site, "-", soilr$Treatment)
+
+#summarize
+soilr <- soilr%>%group_by(site_plot, Collar)%>%summarize(FCO2_DRY_umolm2s = mean(FCO2_DRY_umolm2s, na.rm=TRUE),
+                                                         FCH4_DRY_nmolm2s = mean(FCH4_DRY_nmolm2s, na.rm=TRUE))
+
+
+
 # merge data --------------------------------------------------------------
 
 df.dr <- merge(dr, aranet, by="site_plot")
 df.efflux <- merge(aranet, efflux, by="site_plot")
+df.soilr <- merge(aranet, soilr, by="site_plot")
 
 #rename species to uppercase
 df.efflux <- df.efflux%>%
@@ -150,7 +181,7 @@ species_shapes <- c(
 
 rd.400 <- ggplot(df.dr, aes(x = aranetco2_ppm, y = Rd_400)) +
   geom_point(aes(color = Species, shape = Species), size = 3) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue", show.legend = FALSE) +  # one blue line only
+  geom_smooth(method = "lm", se = TRUE, color = "black", show.legend = FALSE) +  # one blue line only
   labs(
     y = expression("R"[d]*" "[400][ppm]*" (µmol m"^{-2}*" s"^{-1}*")"),
     x = expression("CO"[2]*" ppm")
@@ -163,19 +194,19 @@ rd.400
 
 rd.800 <- ggplot(df.dr, aes(x = aranetco2_ppm, y = Rd_800)) +
   geom_point(aes(color = Species, shape = Species), size = 3) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue", show.legend = FALSE)+
+  geom_smooth(method = "lm", se = TRUE, color = "black", show.legend = FALSE)+
   
-  labs(y = expression("R"[d]*" "[400][ppm]*" (µmol m"^{-2}*" s"^{-1}*")"), 
+  labs(y = expression("R"[d]*" "[800][ppm]*" (µmol m"^{-2}*" s"^{-1}*")"), 
        x = expression("CO"[2]*" ppm")) + 
   theme_bw() + 
-  theme(legend.position = "none") + 
+  theme(legend.position = "") + 
   scale_color_manual(values = species_colors) +
   scale_shape_manual(values = species_shapes)
 rd.800
 
 efflux.co2 <- ggplot(df.efflux, aes(x = aranetco2_ppm, y = CO2_flux.umol.m2.s)) +
   geom_point(aes(color = Species, shape = Species), size = 3) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue", show.legend = FALSE)+
+  geom_smooth(method = "lm", se = TRUE, color = "black", show.legend = FALSE)+
   
   labs(y = expression("CO"[2]*" (µmol m"^{-2}*" s"^{-1}*")"),
        x = expression("CO"[2]*" ppm")) + 
@@ -185,20 +216,50 @@ efflux.co2 <- ggplot(df.efflux, aes(x = aranetco2_ppm, y = CO2_flux.umol.m2.s)) 
   scale_shape_manual(values = species_shapes)
 efflux.co2
 
-efflux.ch4 <- ggplot(df.efflux, aes(x = aranetco2_ppm, y = CH4_flux.umol.m2.s)) +
+efflux.ch4 <- ggplot(df.efflux, aes(x = aranetco2_ppm, y = (1000*CH4_flux.umol.m2.s))) +
   geom_point(aes(color = Species, shape = Species), size = 3) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue",show.legend = FALSE)+
+  geom_smooth(method = "lm", se = TRUE, color = "black", show.legend = FALSE)+
   
-  labs(y = expression("CH"[4]*" (µmol m"^{-2}*" s"^{-1}*")"),
+  labs(y = expression("CH"[4]*" (nmol m"^{-2}*" s"^{-1}*")"),
        x = expression("CO"[2]*" ppm")) + 
   theme_bw() + 
-  theme(legend.position = "bottom") + 
+  theme(legend.title = element_text(face = "bold"), legend.position = "bottom") + 
   scale_color_manual(values = species_colors) +
   scale_shape_manual(values = species_shapes)
 efflux.ch4
 
+df.soilr <- df.soilr%>%filter(site_plot %in% c("S3-A", "S3-B", "S4-A", "S4-B", "S5-A", "S5-B"))
+soil.co2 <- ggplot(df.soilr, aes(x = aranetco2_ppm, y = FCO2_DRY_umolm2s)) +
+  geom_point(aes(color=site_plot), shape=1, size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black",show.legend = FALSE)+
+  
+  labs(y = expression("CO"[2]*" (µmol m"^{-2}*" s"^{-1}*")"),
+       x = expression("CO"[2]*" ppm"),
+       color = "Site-Plot") + 
+  theme_bw() + 
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal",      # Aligns items in one row
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10)
+  ) +
+  guides(color = guide_legend(nrow = 1)) +  # Forces one-row legend
+  scale_color_brewer(palette = "Set3")
+soil.co2
 
-# Stich the four together -------------------------------------------------
+soil.ch4 <- ggplot(df.soilr, aes(x = aranetco2_ppm, y = FCH4_DRY_nmolm2s)) +
+  geom_point(aes(color=site_plot), shape=1, size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black",show.legend = FALSE)+
+  
+  labs(y = expression("CH"[4]*" (nmol m"^{-2}*" s"^{-1}*")"),
+       x = expression("CO"[2]*" ppm")) + 
+  theme_bw() + 
+  theme(legend.position = "bottom")+
+  scale_color_brewer(palette="Dark2")
+soil.ch4
+
+
+# Fig3. efflux paper--> Stitch the four together -------------------------------------------------
 
 # Combine the plots into a 2x2 layout:
 combined_plot <- (efflux.ch4 | efflux.co2) / (rd.400 | rd.800) + 
@@ -207,3 +268,13 @@ combined_plot <- (efflux.ch4 | efflux.co2) / (rd.400 | rd.800) +
 
 # Display the combined plot
 print(combined_plot)
+
+# ATBC/ESA poster--> Stitch the six together -------------------------------------------------
+# Combine the plots into a 2x2 layout:
+combined_plot <- (efflux.ch4 | efflux.co2) / (rd.400 | rd.800) / (soil.ch4 | soil.co2) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
+
+# Display the combined plot
+print(combined_plot)
+ggsave("fig3/combined_plot.jpg", combined_plot, dpi = 300, units = "in", width = 7, height = 10)

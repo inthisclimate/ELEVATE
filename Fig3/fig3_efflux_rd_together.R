@@ -278,3 +278,21 @@ combined_plot <- (efflux.ch4 | efflux.co2) / (rd.400 | rd.800) / (soil.ch4 | soi
 # Display the combined plot
 print(combined_plot)
 ggsave("fig3/combined_plot.jpg", combined_plot, dpi = 300, units = "in", width = 7, height = 10)
+
+
+# Linear model summaries ---------------------------------------------------
+
+#efflux
+summary(lm(CO2_flux.umol.m2.s~aranetco2_ppm, data=df.efflux))
+df.efflux$CH4_flux.nmol.m2.s <- df.efflux$CH4_flux.umol.m2.s*1000
+summary(lm(CH4_flux.nmol.m2.s~aranetco2_ppm, data=df.efflux))
+
+#Rd
+summary(lm(Rd_400~aranetco2_ppm, data=df.dr))
+summary(lm(Rd_800~aranetco2_ppm, data=df.dr))
+
+#soilR
+#Rd
+summary(lm(FCO2_DRY_umolm2s~aranetco2_ppm, data=df.soilr))
+summary(lm(FCH4_DRY_nmolm2s~aranetco2_ppm, data=df.soilr))
+
